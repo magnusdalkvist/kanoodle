@@ -1,6 +1,7 @@
 import { motion, stagger, useAnimate } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
-import { gamePieces } from "../data/gamePieces.json";
+import { SnapPoints } from "./types";
+import { gamePieces } from "./data/gamePieces.json";
 import clsx from "clsx";
 
 export default function Game({ gameStarted }: { gameStarted: boolean }) {
@@ -38,7 +39,7 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
   const [time, setTime] = useState(0);
 
   const gameBoard = useRef<HTMLDivElement | null>(null);
-  const [snapPoints, setSnapPoints] = useState<any>([]);
+  const [snapPoints, setSnapPoints] = useState<SnapPoints>([]);
   const [highestZIndex, setHighestZIndex] = useState(1);
   const [selectedObject, setSelectedObject] = useState<HTMLElement | null>(null);
   const [gameWon, setGameWon] = useState(false);
@@ -47,7 +48,7 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
     //get top left coordinates of each cell in gameBoard
     if (gameBoard.current) {
       const cells = gameBoard.current.children;
-      const snapPoints = [];
+      const snapPoints: SnapPoints = [];
       for (let i = 0; i < cells.length; i++) {
         const cell = cells[i] as HTMLElement;
         const rect = cell.getBoundingClientRect();
@@ -76,7 +77,7 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
   const checkSnapPoints = () => {
     if (snapPoints.length === 0) return;
     const gamePieces = document.querySelectorAll(".gamePieceCell");
-    snapPoints.forEach((snapPoint: any) => {
+    snapPoints.forEach((snapPoint) => {
       snapPoint.occupied = false;
       snapPoint.occupiedBy = "";
 
@@ -90,7 +91,7 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
         }
       });
     });
-    if (snapPoints.every((snapPoint: any) => snapPoint.occupied == true)) {
+    if (snapPoints.every((snapPoint) => snapPoint.occupied == true)) {
       setGameWon(true);
       setStartTimer(false);
     }
@@ -167,7 +168,7 @@ function GamePiece({
   startTimer,
 }: {
   gameBoard: React.RefObject<HTMLDivElement>;
-  snapPoints: any;
+  snapPoints: SnapPoints;
   children: React.ReactNode;
   highestZIndex: number;
   setHighestZIndex: React.Dispatch<React.SetStateAction<number>>;
@@ -290,7 +291,7 @@ function GamePiece({
 
     if (isInsideGameBoard) {
       const closestSnapPoint = snapPoints.reduce(
-        (acc:any, snapPoint:any) => {
+        (acc, snapPoint) => {
           const distance = Math.sqrt(
             (snapPoint.x - scopeRect.x) ** 2 + (snapPoint.y - scopeRect.y) ** 2
           );
@@ -313,7 +314,7 @@ function GamePiece({
       for (let i = 0; i < children.length; i++) {
         const childRect = children[i].getBoundingClientRect();
         const closestSnapPoint: any = snapPoints.reduce(
-          (acc:any, snapPoint:any) => {
+          (acc, snapPoint:any) => {
             const distance = Math.sqrt(
               (snapPoint.x - childRect.x) ** 2 + (snapPoint.y - childRect.y) ** 2
             );
