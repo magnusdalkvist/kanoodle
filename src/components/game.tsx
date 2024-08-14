@@ -1,7 +1,8 @@
-import { motion, stagger, useAnimate, useDragControls } from "framer-motion";
+import { motion, stagger, useAnimate } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import { SnapPoints } from "../types";
 import { gamePieces } from "../data/gamePieces.json";
+import clsx from "clsx";
 
 export default function Game({ gameStarted }: { gameStarted: boolean }) {
   const staggerMenuItems = stagger(0.1, { startDelay: 1.7 });
@@ -34,6 +35,9 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
 
   const scope = useMenuAnimation(gameStarted);
 
+  const [startTimer, setStartTimer] = useState(false);
+  const [time, setTime] = useState(0);
+
   const gameBoard = useRef<HTMLDivElement | null>(null);
   const [snapPoints, setSnapPoints] = useState<SnapPoints>([]);
   const [highestZIndex, setHighestZIndex] = useState(1);
@@ -48,24 +52,39 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
       for (let i = 0; i < cells.length; i++) {
         const cell = cells[i] as HTMLElement;
         const rect = cell.getBoundingClientRect();
-        snapPoints.push({ x: rect.left, y: rect.top, occupied: false, occupiedBy: "" });
+        snapPoints.push({ x: rect.x, y: rect.y, occupied: false, occupiedBy: "" });
       }
       setSnapPoints(snapPoints);
       checkSnapPoints();
     }
   }, []);
 
+  useEffect(() => {
+    let intervalId: number;
+    if (startTimer) {
+      // setting time from 0 to 1 every 10 milisecond using javascript setInterval method
+      intervalId = setInterval(() => setTime(time + 1), 10)
+    }
+    return () => clearInterval(intervalId);
+  }, [startTimer, time]);
+
+  // Minutes calculation
+  const minutes = Math.floor((time % 360000) / 6000);
+
+  // Seconds calculation
+  const seconds = Math.floor((time % 6000) / 100);
+
   const checkSnapPoints = () => {
     if (snapPoints.length === 0) return;
     const gamePieces = document.querySelectorAll(".gamePieceCell");
-    snapPoints.forEach((snapPoint, i) => {
+    snapPoints.forEach((snapPoint) => {
       snapPoint.occupied = false;
       snapPoint.occupiedBy = "";
 
       gamePieces.forEach((gamePiece) => {
         if (
-          snapPoint.x === gamePiece.getBoundingClientRect().left - 5 &&
-          snapPoint.y === gamePiece.getBoundingClientRect().top - 5
+          snapPoint.x === gamePiece.getBoundingClientRect().x - 5 &&
+          snapPoint.y === gamePiece.getBoundingClientRect().y - 5
         ) {
           snapPoint.occupied = true;
           snapPoint.occupiedBy = gamePiece.getAttribute("data-color")!;
@@ -74,42 +93,56 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
     });
     if (snapPoints.every((snapPoint) => snapPoint.occupied == true)) {
       setGameWon(true);
+      setStartTimer(false);
     }
   };
 
   return (
-    <div ref={scope} className="flex flex-col justify-center items-center">
+    <div ref={scope} className=" pointer-events-none flex flex-col justify-center items-center">
       <div ref={gameBoard} className="grid gameboard opacity-0 grid-cols-11 grid-rows-5 border">
         {Array.from({ length: 55 }, (_, i) => {
           return <div key={i} className="gameCell w-10 h-10 border" />;
         })}
       </div>
-      <div>
-        {gamePieces.map((gamePiece, i) => (
-          <GamePiece
-            index={i}
-            key={i}
-            snapPoints={snapPoints}
-            gameBoard={gameBoard}
-            highestZIndex={highestZIndex}
-            setHighestZIndex={setHighestZIndex}
-            selectedObject={selectedObject}
-            setSelectedObject={setSelectedObject}
-            checkSnapPoints={checkSnapPoints}
-          >
-            {gamePiece.cells.map((cell, i) => (
-              <div
-                key={i}
-                className={`gamePieceCell pointer-events-auto w-10 h-10 rounded-full scale-75 ${cell.color} col-start-${cell.colStart}`}
-                data-color={cell.color}
-              ></div>
-            ))}
-          </GamePiece>
-        ))}
+      <div
+        className={clsx(
+          "select-none ml-1 gameboard timer opacity-0 text-7xl flex gap-2 pt-5 font-dots transition-colors duration-300",
+          startTimer ? "text-neutral-200" : "text-[#333]"
+        )}
+      >
+        {/* Make a div for each number from 0-9 in minutes and seconds */}
+        <div>{Math.floor(minutes / 10)}</div>
+        <div>{minutes % 10}</div>
+        <div>:</div>
+        <div>{Math.floor(seconds / 10)}</div>
+        <div>{seconds % 10}</div>
       </div>
-      <div className="piecesContainer mx-auto max-w-[1200px] pointer-events-none absolute flex flex-wrap m-5 left-5 right-5 top-[calc(50%+266px/2)] bottom-5">
-        {gamePieces.map((gamePiece, i) => (
-          <div key={i} className="min-w-[180px] flex-1"></div>
+      {gamePieces.map((gamePiece, i) => (
+        <GamePiece
+          index={i}
+          key={i}
+          snapPoints={snapPoints}
+          gameBoard={gameBoard}
+          highestZIndex={highestZIndex}
+          setHighestZIndex={setHighestZIndex}
+          selectedObject={selectedObject}
+          setSelectedObject={setSelectedObject}
+          checkSnapPoints={checkSnapPoints}
+          setStartTimer={setStartTimer}
+          startTimer={startTimer}
+        >
+          {gamePiece.cells.map((cell, i) => (
+            <div
+              key={i}
+              className={`gamePieceCell pointer-events-auto w-10 h-10 rounded-full scale-75 ${cell.color} col-start-${cell.colStart}`}
+              data-color={cell.color}
+            ></div>
+          ))}
+        </GamePiece>
+      ))}
+      <div className="piecesContainer mx-auto max-w-[1200px] absolute flex flex-wrap m-5 left-5 right-5 top-[calc(50%+266px/2)] bottom-5">
+        {gamePieces.map((piece) => (
+          <div key={piece.id} className="min-w-[180px] flex-1"></div>
         ))}
       </div>
       {gameWon && (
@@ -131,6 +164,8 @@ function GamePiece({
   setSelectedObject,
   checkSnapPoints,
   index,
+  setStartTimer,
+  startTimer,
 }: {
   gameBoard: React.RefObject<HTMLDivElement>;
   snapPoints: SnapPoints;
@@ -141,34 +176,38 @@ function GamePiece({
   setSelectedObject: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   checkSnapPoints: () => void;
   index: number;
+  setStartTimer: React.Dispatch<React.SetStateAction<boolean>>;
+  startTimer: boolean;
 }) {
   const constraintsRef = useRef<HTMLElement | null>(null);
-  const controls = useDragControls();
   const [scope, animate] = useAnimate();
-  useEffect(() => {
-    constraintsRef.current = document.body;
-  }, []);
-
   const [mouseDown, setMouseDown] = useState(false);
-
   const [rotate, setRotate] = useState(0);
   const [flip, setFlip] = useState(true);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const prevPositionRef = useRef<{ x: number; y: number; rotate: number; flip: boolean } | null>(
     null
   );
-
-  const usedPositions = useRef<{ x: number; y: number }[]>([]);
+  const flipRef = useRef(flip);
 
   useEffect(() => {
+    flipRef.current = flip;
+  }, [flip]);
+
+  useEffect(() => {
+    constraintsRef.current = document.body;
+
     setRotate(Math.floor(Math.random() * 4) * 90);
     const scopeRect = scope.current.firstChild.getBoundingClientRect();
-    const piecesContainer = document.querySelector(".piecesContainer").children[index].getBoundingClientRect();
-    
+    const piecesContainer = document
+      .querySelector(".piecesContainer")
+      ?.children[index].getBoundingClientRect();
+
+    if (!piecesContainer) return;
     //put piece in center of piecesContainer
     setPosition({
-      x: piecesContainer.left + piecesContainer.width / 2 - scopeRect.width / 2,
-      y: piecesContainer.top + piecesContainer.height / 2 - scopeRect.height / 2,
+      x: piecesContainer.x + piecesContainer.width / 2 - scopeRect.width / 2,
+      y: piecesContainer.y + piecesContainer.height / 2 - scopeRect.height / 2,
     });
   }, []);
 
@@ -177,8 +216,8 @@ function GamePiece({
   };
 
   const rotateObject = (clockwise: boolean) => {
-    const increment = clockwise ? -90 : 90;
-    flip ? setRotate((prev) => prev - increment) : setRotate((prev) => prev + increment);
+    const increment = clockwise ? 90 : -90;
+    setRotate((prev) => flipRef.current ? prev + increment : prev - increment);
   };
 
   useEffect(() => {
@@ -189,7 +228,6 @@ function GamePiece({
     });
 
     childAnimation.then(() => {
-      console.log("flip/rotate changed");
       if (mouseDown) return;
 
       checkPiecePosition();
@@ -198,7 +236,6 @@ function GamePiece({
 
   useEffect(() => {
     if (mouseDown) return;
-    console.log("position changed");
     const animation = animate(scope.current, {
       x: position.x,
       y: position.y,
@@ -228,38 +265,39 @@ function GamePiece({
   }, [position]);
 
   const checkPiecePosition = () => {
-    console.log("Checking piece position");
     if (!gameBoard.current || !scope.current) return;
+
+    !startTimer && setStartTimer(true);
 
     const scopeRect = scope.current.firstChild.getBoundingClientRect();
 
     const gameBoardRect = gameBoard.current.getBoundingClientRect();
-    const offsetX = scopeRect.left - scope.current.getBoundingClientRect().left;
-    const offsetY = scopeRect.top - scope.current.getBoundingClientRect().top;
+    const offsetX = scopeRect.x - scope.current.getBoundingClientRect().x;
+    const offsetY = scopeRect.y - scope.current.getBoundingClientRect().y;
 
     const border = 20;
 
     const isInsideGameBoard =
-      scopeRect.left >= gameBoardRect.left - border &&
+      scopeRect.x >= gameBoardRect.x - border &&
       scopeRect.right <= gameBoardRect.right + border &&
-      scopeRect.top >= gameBoardRect.top - border &&
+      scopeRect.y >= gameBoardRect.y - border &&
       scopeRect.bottom <= gameBoardRect.bottom + border;
 
     const isTouchingGameBoard =
-      scopeRect.left < gameBoardRect.right &&
-      scopeRect.right > gameBoardRect.left &&
-      scopeRect.top < gameBoardRect.bottom &&
-      scopeRect.bottom > gameBoardRect.top;
+      scopeRect.x < gameBoardRect.right &&
+      scopeRect.right > gameBoardRect.x &&
+      scopeRect.y < gameBoardRect.bottom &&
+      scopeRect.bottom > gameBoardRect.y;
 
     if (isInsideGameBoard) {
       const closestSnapPoint = snapPoints.reduce(
         (acc, snapPoint) => {
           const distance = Math.sqrt(
-            (snapPoint.x - scopeRect.left) ** 2 + (snapPoint.y - scopeRect.top) ** 2
+            (snapPoint.x - scopeRect.x) ** 2 + (snapPoint.y - scopeRect.y) ** 2
           );
           const fitsWithinGameBoard =
-            snapPoint.x >= gameBoardRect.left &&
-            snapPoint.y >= gameBoardRect.top &&
+            snapPoint.x >= gameBoardRect.x &&
+            snapPoint.y >= gameBoardRect.y &&
             snapPoint.x + scopeRect.width <= gameBoardRect.right &&
             snapPoint.y + scopeRect.height <= gameBoardRect.bottom;
 
@@ -273,20 +311,19 @@ function GamePiece({
 
       let isColliding = false;
       const children = scope.current.firstChild.children;
-      console.log("running collision check");
       for (let i = 0; i < children.length; i++) {
         const childRect = children[i].getBoundingClientRect();
-        const closestSnapPoint = snapPoints.reduce(
-          (acc, snapPoint) => {
+        const closestSnapPoint: any = snapPoints.reduce(
+          (acc, snapPoint:any) => {
             const distance = Math.sqrt(
-              (snapPoint.x - childRect.left) ** 2 + (snapPoint.y - childRect.top) ** 2
+              (snapPoint.x - childRect.x) ** 2 + (snapPoint.y - childRect.y) ** 2
             );
             if (distance < acc.distance) {
               return { snapPoint, distance };
             }
             return acc;
           },
-          { snapPoint: { x: 0, y: 0 }, distance: Infinity }
+          { snapPoint: { x: 0, y: 0, occupied: false, occupiedBy: "" }, distance: Infinity }
         );
 
         if (
@@ -298,14 +335,10 @@ function GamePiece({
         }
       }
 
-      console.log("collision check complete");
-
       if (isColliding) {
-        console.log("Colliding");
-        console.log(prevPositionRef.current, position);
         setPosition({
-          x: prevPositionRef.current?.x,
-          y: prevPositionRef.current?.y,
+          x: prevPositionRef.current?.x!,
+          y: prevPositionRef.current?.y!,
         });
         setRotate(prevPositionRef.current?.rotate!);
         setFlip(prevPositionRef.current?.flip!);
@@ -319,22 +352,22 @@ function GamePiece({
       }
     } else if (isTouchingGameBoard) {
       setPosition({
-        x: prevPositionRef.current?.x,
-        y: prevPositionRef.current?.y,
+        x: prevPositionRef.current?.x!,
+        y: prevPositionRef.current?.y!,
       });
       setRotate(prevPositionRef.current?.rotate!);
       setFlip(prevPositionRef.current?.flip!);
     } else {
       setPosition({
-        x: scopeRect.left - offsetX,
-        y: scopeRect.top - offsetY,
+        x: scopeRect.x - offsetX,
+        y: scopeRect.y - offsetY,
       });
       setRotate(rotate);
       setFlip(flip);
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e:KeyboardEvent) => {
     if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft") {
       rotateObject(false);
     }
@@ -364,52 +397,58 @@ function GamePiece({
     document.removeEventListener("mouseup", handleMouseUp);
   };
 
+  const [dragged, setDragged] = useState(false);
+
   return (
     <motion.div
-      className="gamePiece opacity-0 grid absolute top-0 left-0 pointer-events-none justify-items-center"
+      className="gamePiece touch-none opacity-0 grid absolute top-0 left-0 justify-items-center"
       ref={scope}
       drag
-      dragListener={true}
-      dragControls={controls}
       dragConstraints={constraintsRef}
       dragMomentum={false}
       dragElastic={0}
       onDragEnd={() => {
         checkPiecePosition();
       }}
-      onMouseDown={() => {
+      onPointerUp={() => {
+        if (!dragged) {
+          setSelectedObject(scope.current);
+        }
+      }}
+      onPointerDown={() => {
+        setDragged(false);
         scope.current.style.zIndex = highestZIndex;
         setHighestZIndex(highestZIndex + 1);
         setMouseDown(true);
-
+        if (selectedObject !== scope.current) {
+          setSelectedObject(null);
+        }
         // Add event listener to "a" and "d" to rotate object
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("mouseup", handleMouseUp);
       }}
       onDragStart={() => {
-        console.log("drag start");
         setMouseDown(true);
         setSelectedObject(null);
+        setDragged(true);
       }}
     >
-      <motion.div className="grid pointer-events-none">
-        {React.Children.map(children, (child) =>
+      <motion.div className="grid">
+        {React.Children.map(children, (child:any) =>
           React.cloneElement(child, {
-            onDoubleClick: () => {
-              selectedObject == scope.current
-                ? setSelectedObject(null)
-                : setSelectedObject(scope.current);
-            },
             style: {
-              ...child.props.style,
+              ...child?.props.style,
               border: selectedObject === scope.current ? "2px solid white" : null,
             },
           })
         )}
       </motion.div>
       {selectedObject === scope.current && (
-        <div className="flex gap-4 absolute pt-4 top-full pointer-events-auto">
-          <div className="bg-gray-700 p-2 rounded-full" onClick={() => rotateObject(false)}>
+        <div draggable={false} className="flex gap-4 absolute pt-4 top-full pointer-events-none">
+          <div
+            className="bg-gray-700 p-2 rounded-full pointer-events-auto"
+            onClick={() => rotateObject(false)}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -424,7 +463,7 @@ function GamePiece({
               <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
             </svg>
           </div>
-          <div className="bg-gray-700 p-2 rounded-full" onClick={flipObject}>
+          <div className="bg-gray-700 p-2 rounded-full pointer-events-auto" onClick={flipObject}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -435,7 +474,10 @@ function GamePiece({
               <path d="M7 2.5a.5.5 0 0 0-.939-.24l-6 11A.5.5 0 0 0 .5 14h6a.5.5 0 0 0 .5-.5v-11zm2.376-.485a.5.5 0 0 1 .563.246l6 11A.5.5 0 0 1 15.5 14h-6a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .376-.485zM10 4.461V13h4.658L10 4.46z" />
             </svg>
           </div>
-          <div className="bg-gray-700 p-2 rounded-full" onClick={() => rotateObject(true)}>
+          <div
+            className="bg-gray-700 p-2 rounded-full pointer-events-auto"
+            onClick={() => rotateObject(true)}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"

@@ -31,7 +31,7 @@ export default function StartScreen({
 
       animate(
         ".letter",
-        { color: isOpen ? "#333" : "" },
+        { color: isOpen ? "#333" : "none" },
         {
           duration: 0.5,
           delay: 1,
@@ -46,7 +46,7 @@ export default function StartScreen({
 
   return (
     <div ref={scope} className={clsx("absolute inset-0 flex items-center justify-center flex-col", gameStarted && "pointer-events-none")}>
-      <h1 className="tracking-tighter flex gap-2">
+      <h1 className="tracking-tighter flex gap-2 select-none">
         <span className="text-blue-500 letter">N</span>
         <span className="text-purple-400 letter">O</span>
         <span className="text-green-400 letter">O</span>
