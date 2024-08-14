@@ -18,7 +18,13 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Base URL and Paths */
+    "baseUrl": "./",
+    "paths": {
+      "@components/*": ["src/components/*"]
+    }
   },
   "include": ["src"]
 }
