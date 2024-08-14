@@ -1,6 +1,5 @@
 import { useState } from "react";
 import "./App.css";
-import Game from "./components/Game";
 import StartScreen from "./components/StartScreen";
 
 function App() {
@@ -9,7 +8,6 @@ function App() {
   return (
     <>
       <StartScreen gameStarted={gameStarted} setGameStarted={setGameStarted} />
-      {gameStarted && <Game gameStarted={gameStarted} />}
     </>
   );
 }
