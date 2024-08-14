@@ -202,7 +202,7 @@ function GamePiece({
   index: number;
   setStartTimer: React.Dispatch<React.SetStateAction<boolean>>;
   startTimer: boolean;
-  reset: boolean;
+  reset: number;
 }) {
   const constraintsRef = useRef<HTMLElement | null>(null);
   const [scope, animate] = useAnimate();
