@@ -1,0 +1,107 @@
+{
+  "gamePieces": [
+    {
+      "cells": [
+        { "color": "bg-blue-500", "colStart": 1 },
+        { "color": "bg-blue-500", "colStart": 1 },
+        { "color": "bg-blue-500", "colStart": 1 },
+        { "color": "bg-blue-500", "colStart": 1 },
+        { "color": "bg-blue-500", "colStart": 2 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-purple-400", "colStart": 1 },
+        { "color": "bg-purple-400", "colStart": 1 },
+        { "color": "bg-purple-400", "colStart": 1 },
+        { "color": "bg-purple-400", "colStart": 1 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-green-300", "colStart": 1 },
+        { "color": "bg-green-300", "colStart": 2 },
+        { "color": "bg-green-300", "colStart": 1 },
+        { "color": "bg-green-300", "colStart": 2 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-orange-400", "colStart": 1 },
+        { "color": "bg-orange-400", "colStart": 1 },
+        { "color": "bg-orange-400", "colStart": 1 },
+        { "color": "bg-orange-400", "colStart": 2 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-blue-300", "colStart": 1 },
+        { "color": "bg-blue-300", "colStart": 1 },
+        { "color": "bg-blue-300", "colStart": 1 },
+        { "color": "bg-blue-300", "colStart": 2 },
+        { "color": "bg-blue-300", "colStart": 3 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-red-400", "colStart": 1 },
+        { "color": "bg-red-400", "colStart": 2 },
+        { "color": "bg-red-400", "colStart": 1 },
+        { "color": "bg-red-400", "colStart": 2 },
+        { "color": "bg-red-400", "colStart": 1 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-gray-300", "colStart": 2 },
+        { "color": "bg-gray-300", "colStart": 1 },
+        { "color": "bg-gray-300", "colStart": 2 },
+        { "color": "bg-gray-300", "colStart": 3 },
+        { "color": "bg-gray-300", "colStart": 2 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-green-500", "colStart": 2 },
+        { "color": "bg-green-500", "colStart": 1 },
+        { "color": "bg-green-500", "colStart": 2 },
+        { "color": "bg-green-500", "colStart": 1 },
+        { "color": "bg-green-500", "colStart": 1 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-pink-500", "colStart": 1 },
+        { "color": "bg-pink-500", "colStart": 2 },
+        { "color": "bg-pink-500", "colStart": 2 },
+        { "color": "bg-pink-500", "colStart": 3 },
+        { "color": "bg-pink-500", "colStart": 3 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-rose-200", "colStart": 2 },
+        { "color": "bg-rose-200", "colStart": 2 },
+        { "color": "bg-rose-200", "colStart": 1 },
+        { "color": "bg-rose-200", "colStart": 2 },
+        { "color": "bg-rose-200", "colStart": 2 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-white", "colStart": 1 },
+        { "color": "bg-white", "colStart": 2 },
+        { "color": "bg-white", "colStart": 1 }
+      ]
+    },
+    {
+      "cells": [
+        { "color": "bg-yellow-400", "colStart": 1 },
+        { "color": "bg-yellow-400", "colStart": 2 },
+        { "color": "bg-yellow-400", "colStart": 1 },
+        { "color": "bg-yellow-400", "colStart": 1 },
+        { "color": "bg-yellow-400", "colStart": 2 }
+      ]
+    }
+  ]
+}

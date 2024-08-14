@@ -1,44 +1,66 @@
-import { motion, useAnimate, useDragControls } from "framer-motion";
-import { snap } from "gsap";
+import { motion, stagger, useAnimate, useDragControls } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
+import { SnapPoints } from "../types";
+import { gamePieces } from "../data/gamePieces.json";
 
-export default function Game() {
+export default function Game({ gameStarted }: { gameStarted: boolean }) {
+  const staggerMenuItems = stagger(0.1, { startDelay: 1.7 });
+
+  function useMenuAnimation(isOpen: boolean) {
+    const [scope, animate] = useAnimate();
+
+    useEffect(() => {
+      animate(
+        ".gameboard",
+        { opacity: isOpen ? 1 : 0 },
+        {
+          duration: 0.5,
+          delay: 1.2,
+        }
+      );
+
+      animate(
+        ".gamePiece",
+        { opacity: isOpen ? 1 : 0 },
+        {
+          duration: 0.5,
+          delay: isOpen ? staggerMenuItems : 0,
+        }
+      );
+    }, [isOpen]);
+
+    return scope;
+  }
+
+  const scope = useMenuAnimation(gameStarted);
+
   const gameBoard = useRef<HTMLDivElement | null>(null);
-  const [snapPoints, setSnapPoints] = useState<
-    Array<{ x: number; y: number; occupied: boolean; occupiedBy: HTMLElement | null }>
-  >([]);
+  const [snapPoints, setSnapPoints] = useState<SnapPoints>([]);
   const [highestZIndex, setHighestZIndex] = useState(1);
   const [selectedObject, setSelectedObject] = useState<HTMLElement | null>(null);
+  const [gameWon, setGameWon] = useState(false);
 
   useEffect(() => {
     //get top left coordinates of each cell in gameBoard
     if (gameBoard.current) {
       const cells = gameBoard.current.children;
-      const snapPoints: Array<{
-        x: number;
-        y: number;
-        occupied: boolean;
-        occupiedBy: HTMLElement | null;
-      }> = [];
+      const snapPoints: SnapPoints = [];
       for (let i = 0; i < cells.length; i++) {
         const cell = cells[i] as HTMLElement;
         const rect = cell.getBoundingClientRect();
-        snapPoints.push({ x: rect.left, y: rect.top, occupied: false, occupiedBy: null });
+        snapPoints.push({ x: rect.left, y: rect.top, occupied: false, occupiedBy: "" });
       }
       setSnapPoints(snapPoints);
+      checkSnapPoints();
     }
   }, []);
 
-  useEffect(() => {
-    window.addEventListener("objectMoved", checkSnapPoints);
-  }, [snapPoints]);
-
   const checkSnapPoints = () => {
     if (snapPoints.length === 0) return;
-    const gamePieces = document.querySelectorAll(".gamePiece");
-    snapPoints.forEach((snapPoint) => {
+    const gamePieces = document.querySelectorAll(".gamePieceCell");
+    snapPoints.forEach((snapPoint, i) => {
       snapPoint.occupied = false;
-      snapPoint.occupiedBy = null;
+      snapPoint.occupiedBy = "";
 
       gamePieces.forEach((gamePiece) => {
         if (
@@ -46,358 +68,60 @@ export default function Game() {
           snapPoint.y === gamePiece.getBoundingClientRect().top - 5
         ) {
           snapPoint.occupied = true;
-          snapPoint.occupiedBy = gamePiece as HTMLElement;
+          snapPoint.occupiedBy = gamePiece.getAttribute("data-color")!;
         }
       });
     });
     if (snapPoints.every((snapPoint) => snapPoint.occupied == true)) {
-      console.log("You win!");
+      setGameWon(true);
     }
   };
 
   return (
-    <div className="flex flex-col justify-center items-center gap-10">
-      <div ref={gameBoard} className="grid grid-cols-11 grid-rows-5 border">
+    <div ref={scope} className="flex flex-col justify-center items-center">
+      <div ref={gameBoard} className="grid gameboard opacity-0 grid-cols-11 grid-rows-5 border">
         {Array.from({ length: 55 }, (_, i) => {
-          // add top left coordinates from bounding client to snapPoints
           return <div key={i} className="gameCell w-10 h-10 border" />;
         })}
       </div>
-      <div className="flex flex-wrap max-w-[570px] justify-center items-center">
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-blue-500 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="dark-blue"
-          ></div>
-          <div
-            className="gamePiece bg-blue-500 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="dark-blue"
-          ></div>
-          <div
-            className="gamePiece bg-blue-500 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="dark-blue"
-          ></div>
-          <div
-            className="gamePiece bg-blue-500 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="dark-blue"
-          ></div>
-          <div
-            className="gamePiece bg-blue-500 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="dark-blue"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-purple-400 w-10 h-10 rounded-full scale-75"
-            data-color="purple"
-          ></div>
-          <div
-            className="gamePiece bg-purple-400 w-10 h-10 rounded-full scale-75"
-            data-color="purple"
-          ></div>
-          <div
-            className="gamePiece bg-purple-400 w-10 h-10 rounded-full scale-75"
-            data-color="purple"
-          ></div>
-          <div
-            className="gamePiece bg-purple-400 w-10 h-10 rounded-full scale-75"
-            data-color="purple"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-green-300 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="green"
-          ></div>
-          <div
-            className="gamePiece bg-green-300 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="green"
-          ></div>
-          <div
-            className="gamePiece bg-green-300 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="green"
-          ></div>
-          <div
-            className="gamePiece bg-green-300 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="green"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-orange-400 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="orange"
-          ></div>
-          <div
-            className="gamePiece bg-orange-400 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="orange"
-          ></div>
-          <div
-            className="gamePiece bg-orange-400 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="orange"
-          ></div>
-          <div
-            className="gamePiece bg-orange-400 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="orange"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-blue-300 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="light-blue"
-          ></div>
-          <div
-            className="gamePiece bg-blue-300 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="light-blue"
-          ></div>
-          <div
-            className="gamePiece bg-blue-300 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="light-blue"
-          ></div>
-          <div
-            className="gamePiece bg-blue-300 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="light-blue"
-          ></div>
-          <div
-            className="gamePiece bg-blue-300 w-10 h-10 rounded-full scale-75 col-start-3"
-            data-color="light-blue"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-red-400 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="red"
-          ></div>
-          <div
-            className="gamePiece bg-red-400 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="red"
-          ></div>
-          <div
-            className="gamePiece bg-red-400 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="red"
-          ></div>
-          <div
-            className="gamePiece bg-red-400 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="red"
-          ></div>
-          <div
-            className="gamePiece bg-red-400 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="red"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-gray-300 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="gray"
-          ></div>
-          <div
-            className="gamePiece bg-gray-300 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="gray"
-          ></div>
-          <div
-            className="gamePiece bg-gray-300 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="gray"
-          ></div>
-          <div
-            className="gamePiece bg-gray-300 w-10 h-10 rounded-full scale-75 col-start-3"
-            data-color="gray"
-          ></div>
-          <div
-            className="gamePiece bg-gray-300 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="gray"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-green-500 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="dark-green"
-          ></div>
-          <div
-            className="gamePiece bg-green-500 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="dark-green"
-          ></div>
-          <div
-            className="gamePiece bg-green-500 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="dark-green"
-          ></div>
-          <div
-            className="gamePiece bg-green-500 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="dark-green"
-          ></div>
-          <div
-            className="gamePiece bg-green-500 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="dark-green"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-pink-500 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="pink"
-          ></div>
-          <div
-            className="gamePiece bg-pink-500 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="pink"
-          ></div>
-          <div
-            className="gamePiece bg-pink-500 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="pink"
-          ></div>
-          <div
-            className="gamePiece bg-pink-500 w-10 h-10 rounded-full scale-75 col-start-3"
-            data-color="pink"
-          ></div>
-          <div
-            className="gamePiece bg-pink-500 w-10 h-10 rounded-full scale-75 col-start-3"
-            data-color="pink"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-rose-200 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="rose"
-          ></div>
-          <div
-            className="gamePiece bg-rose-200 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="rose"
-          ></div>
-          <div
-            className="gamePiece bg-rose-200 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="rose"
-          ></div>
-          <div
-            className="gamePiece bg-rose-200 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="rose"
-          ></div>
-          <div
-            className="gamePiece bg-rose-200 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="rose"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-white w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="white"
-          ></div>
-          <div
-            className="gamePiece bg-white w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="white"
-          ></div>
-          <div
-            className="gamePiece bg-white w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="white"
-          ></div>
-        </Object>
-        <Object
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-        >
-          <div
-            className="gamePiece bg-yellow-400 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="yellow"
-          ></div>
-          <div
-            className="gamePiece bg-yellow-400 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="yellow"
-          ></div>
-          <div
-            className="gamePiece bg-yellow-400 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="yellow"
-          ></div>
-          <div
-            className="gamePiece bg-yellow-400 w-10 h-10 rounded-full scale-75 col-start-1"
-            data-color="yellow"
-          ></div>
-          <div
-            className="gamePiece bg-yellow-400 w-10 h-10 rounded-full scale-75 col-start-2"
-            data-color="yellow"
-          ></div>
-        </Object>
+      <div>
+        {gamePieces.map((gamePiece, i) => (
+          <GamePiece
+            index={i}
+            key={i}
+            snapPoints={snapPoints}
+            gameBoard={gameBoard}
+            highestZIndex={highestZIndex}
+            setHighestZIndex={setHighestZIndex}
+            selectedObject={selectedObject}
+            setSelectedObject={setSelectedObject}
+            checkSnapPoints={checkSnapPoints}
+          >
+            {gamePiece.cells.map((cell, i) => (
+              <div
+                key={i}
+                className={`gamePieceCell pointer-events-auto w-10 h-10 rounded-full scale-75 ${cell.color} col-start-${cell.colStart}`}
+                data-color={cell.color}
+              ></div>
+            ))}
+          </GamePiece>
+        ))}
       </div>
+      <div className="piecesContainer mx-auto max-w-[1200px] pointer-events-none absolute flex flex-wrap m-5 left-5 right-5 top-[calc(50%+266px/2)] bottom-5">
+        {gamePieces.map((gamePiece, i) => (
+          <div key={i} className="min-w-[180px] flex-1"></div>
+        ))}
+      </div>
+      {gameWon && (
+        <div className="fixed z-[10000000] inset-0 bg-[rgba(0,0,0,0.5)] backdrop-blur-md text-5xl font-bold text-green-500 flex items-center justify-center">
+          Perfect!
+        </div>
+      )}
     </div>
   );
 }
 
-function Object({
+function GamePiece({
   gameBoard,
   snapPoints,
   children,
@@ -405,39 +129,107 @@ function Object({
   setHighestZIndex,
   selectedObject,
   setSelectedObject,
+  checkSnapPoints,
+  index,
+}: {
+  gameBoard: React.RefObject<HTMLDivElement>;
+  snapPoints: SnapPoints;
+  children: React.ReactNode;
+  highestZIndex: number;
+  setHighestZIndex: React.Dispatch<React.SetStateAction<number>>;
+  selectedObject: HTMLElement | null;
+  setSelectedObject: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
+  checkSnapPoints: () => void;
+  index: number;
 }) {
-  const [scope, animate] = useAnimate();
   const constraintsRef = useRef<HTMLElement | null>(null);
   const controls = useDragControls();
-
-  const [prevPos, setPrevPos] = useState({ x: 0, y: 0, rotate: 0, flip: 0 });
-
-  const [mouseIsDown, setMouseIsDown] = useState(false);
-  const [rotate, setRotate] = useState(0);
-  const [flip, setFlip] = useState(0);
-
-  const flipObject = () => {
-    setFlip((prev) => (prev == 180 ? 0 : 180));
-  };
-
-  const rotateObject = (reverse?: boolean) => {
-    console.log("rotate", reverse, flip);
-    let rotateAmount = reverse ? 90 : -90;
-    setRotate((prev) => prev + rotateAmount);
-    if (mouseIsDown) return;
-    setTimeout(() => {
-      mouseUp();
-    }, 500);
-  };
-
+  const [scope, animate] = useAnimate();
   useEffect(() => {
     constraintsRef.current = document.body;
   }, []);
 
-  const mouseUp = () => {
-    setMouseIsDown(false);
+  const [mouseDown, setMouseDown] = useState(false);
 
-    scope.current.removeAttribute("dragging");
+  const [rotate, setRotate] = useState(0);
+  const [flip, setFlip] = useState(true);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const prevPositionRef = useRef<{ x: number; y: number; rotate: number; flip: boolean } | null>(
+    null
+  );
+
+  const usedPositions = useRef<{ x: number; y: number }[]>([]);
+
+  useEffect(() => {
+    setRotate(Math.floor(Math.random() * 4) * 90);
+    const scopeRect = scope.current.firstChild.getBoundingClientRect();
+    const piecesContainer = document.querySelector(".piecesContainer").children[index].getBoundingClientRect();
+    
+    //put piece in center of piecesContainer
+    setPosition({
+      x: piecesContainer.left + piecesContainer.width / 2 - scopeRect.width / 2,
+      y: piecesContainer.top + piecesContainer.height / 2 - scopeRect.height / 2,
+    });
+  }, []);
+
+  const flipObject = () => {
+    setFlip((prev) => !prev);
+  };
+
+  const rotateObject = (clockwise: boolean) => {
+    const increment = clockwise ? -90 : 90;
+    flip ? setRotate((prev) => prev - increment) : setRotate((prev) => prev + increment);
+  };
+
+  useEffect(() => {
+    const childAnimation = animate(scope.current.firstChild, {
+      rotateY: flip ? 0 : 180,
+      rotateZ: rotate,
+      origin: 0.5,
+    });
+
+    childAnimation.then(() => {
+      console.log("flip/rotate changed");
+      if (mouseDown) return;
+
+      checkPiecePosition();
+    });
+  }, [flip, rotate]);
+
+  useEffect(() => {
+    if (mouseDown) return;
+    console.log("position changed");
+    const animation = animate(scope.current, {
+      x: position.x,
+      y: position.y,
+      duration: 0.3,
+    });
+
+    animation.then(() => {
+      checkSnapPoints();
+    });
+
+    const childAnimation = animate(scope.current.firstChild, {
+      rotateY: flip ? 0 : 180,
+      rotateZ: rotate,
+      origin: 0.5,
+    });
+
+    childAnimation.then(() => {
+      checkSnapPoints();
+    });
+
+    prevPositionRef.current = {
+      x: position.x,
+      y: position.y,
+      rotate: rotate,
+      flip: flip,
+    };
+  }, [position]);
+
+  const checkPiecePosition = () => {
+    console.log("Checking piece position");
+    if (!gameBoard.current || !scope.current) return;
 
     const scopeRect = scope.current.firstChild.getBoundingClientRect();
 
@@ -481,6 +273,7 @@ function Object({
 
       let isColliding = false;
       const children = scope.current.firstChild.children;
+      console.log("running collision check");
       for (let i = 0; i < children.length; i++) {
         const childRect = children[i].getBoundingClientRect();
         const closestSnapPoint = snapPoints.reduce(
@@ -488,13 +281,7 @@ function Object({
             const distance = Math.sqrt(
               (snapPoint.x - childRect.left) ** 2 + (snapPoint.y - childRect.top) ** 2
             );
-            const fitsWithinGameBoard =
-              snapPoint.x >= gameBoardRect.left &&
-              snapPoint.y >= gameBoardRect.top &&
-              snapPoint.x + scopeRect.width <= gameBoardRect.right &&
-              snapPoint.y + scopeRect.height <= gameBoardRect.bottom;
-
-            if (distance < acc.distance && fitsWithinGameBoard) {
+            if (distance < acc.distance) {
               return { snapPoint, distance };
             }
             return acc;
@@ -503,130 +290,118 @@ function Object({
         );
 
         if (
-          closestSnapPoint.distance < 20 &&
           closestSnapPoint.snapPoint.occupied &&
-          closestSnapPoint.snapPoint.occupiedBy.getAttribute("data-color") !==
-            children[i].getAttribute("data-color")
+          closestSnapPoint.snapPoint.occupiedBy !== children[i].getAttribute("data-color")
         ) {
           isColliding = true;
           break;
         }
       }
 
+      console.log("collision check complete");
+
       if (isColliding) {
         console.log("Colliding");
-        animate(scope.current, {
-          x: prevPos.x,
-          y: prevPos.y,
+        console.log(prevPositionRef.current, position);
+        setPosition({
+          x: prevPositionRef.current?.x,
+          y: prevPositionRef.current?.y,
         });
-        animate(scope.current.firstChild, {
-          rotate: prevPos.rotate,
-          flip: prevPos.flip,
-        });
+        setRotate(prevPositionRef.current?.rotate!);
+        setFlip(prevPositionRef.current?.flip!);
       } else {
-        animate(scope.current, {
+        setPosition({
           x: closestSnapPoint.snapPoint.x - offsetX,
           y: closestSnapPoint.snapPoint.y - offsetY,
         });
-        console.log("Moved to snap point");
-        setPrevPos({
-          x: closestSnapPoint.snapPoint.x - offsetX,
-          y: closestSnapPoint.snapPoint.y - offsetY,
-          rotate: rotate,
-          flip: flip,
-        });
+        setRotate(rotate);
+        setFlip(flip);
       }
     } else if (isTouchingGameBoard) {
-      console.log("Touching game board");
-      animate(scope.current, {
-        x: prevPos.x,
-        y: prevPos.y,
+      setPosition({
+        x: prevPositionRef.current?.x,
+        y: prevPositionRef.current?.y,
       });
-      animate(scope.current.firstChild, {
-        rotate: rotate,
-        flip: flip,
-      })
+      setRotate(prevPositionRef.current?.rotate!);
+      setFlip(prevPositionRef.current?.flip!);
+    } else {
+      setPosition({
+        x: scopeRect.left - offsetX,
+        y: scopeRect.top - offsetY,
+      });
+      setRotate(rotate);
+      setFlip(flip);
     }
-
-    setTimeout(() => dispatchEvent(new CustomEvent("objectMoved")), 500);
   };
 
-  useEffect(() => {
-    console.log(prevPos);
-  }, [prevPos]);
+  const handleKeyDown = (e) => {
+    if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft") {
+      rotateObject(false);
+    }
+    if (e.key === "d" || e.key === "D" || e.key === "ArrowRight") {
+      rotateObject(true);
+    }
+    if (
+      e.key === "f" ||
+      e.key === "s" ||
+      e.key === "w" ||
+      e.key === "F" ||
+      e.key === "S" ||
+      e.key === "W" ||
+      e.key === "ArrowUp" ||
+      e.key === "ArrowDown" ||
+      e.key === " "
+    ) {
+      flipObject();
+    }
+  };
+
+  const handleMouseUp = () => {
+    setMouseDown(false);
+
+    // Remove event listener to "a" and "d" to rotate object
+    document.removeEventListener("keydown", handleKeyDown);
+    document.removeEventListener("mouseup", handleMouseUp);
+  };
 
   return (
     <motion.div
-      className="grid absolute top-0 left-0 pointer-events-none justify-items-center"
+      className="gamePiece opacity-0 grid absolute top-0 left-0 pointer-events-none justify-items-center"
       ref={scope}
-      animate={{ rotateY: 0, x: 0, y: 0 }}
       drag
-      dragListener={false}
+      dragListener={true}
       dragControls={controls}
       dragConstraints={constraintsRef}
       dragMomentum={false}
+      dragElastic={0}
+      onDragEnd={() => {
+        checkPiecePosition();
+      }}
       onMouseDown={() => {
         scope.current.style.zIndex = highestZIndex;
-        setHighestZIndex(highestZIndex + 10);
+        setHighestZIndex(highestZIndex + 1);
+        setMouseDown(true);
 
-        console.log("saved pos")
-        setPrevPos({
-            x: scope.current.getBoundingClientRect().left,
-            y: scope.current.getBoundingClientRect().top,
-            rotate: prevPos.rotate,
-            flip: prevPos.flip,
-          });
-
-        scope.current.setAttribute("dragging", "");
-
-        // Define the event listener functions
-        const handleKeyDownA = (e: KeyboardEvent) => {
-          if (e.key === "a") rotateObject(flip != 180);
-        };
-
-        const handleKeyDownD = (e: KeyboardEvent) => {
-          if (e.key === "d") rotateObject(flip == 180);
-        };
-
-        const handleKeyDownWS = (e: KeyboardEvent) => {
-          if (e.key === "w" || e.key === "s") flipObject();
-        };
-
-        // Add the event listeners
-        window.addEventListener("keydown", handleKeyDownA);
-        window.addEventListener("keydown", handleKeyDownD);
-        window.addEventListener("keydown", handleKeyDownWS);
-
-        // When pointer is up, remove event listeners
-        const handleMouseUp = () => {
-            window.removeEventListener("keydown", handleKeyDownA);
-            window.removeEventListener("keydown", handleKeyDownD);
-            window.removeEventListener("keydown", handleKeyDownWS);
-            mouseUp();
-            window.removeEventListener("mouseup", handleMouseUp);
-        };
-        
-        window.addEventListener("mouseup", handleMouseUp);
+        // Add event listener to "a" and "d" to rotate object
+        document.addEventListener("keydown", handleKeyDown);
+        document.addEventListener("mouseup", handleMouseUp);
+      }}
+      onDragStart={() => {
+        console.log("drag start");
+        setMouseDown(true);
+        setSelectedObject(null);
       }}
     >
-      <motion.div
-        className="grid pointer-events-none"
-        animate={{ rotateY: flip, rotateZ: rotate, origin: 0.5 }}
-      >
+      <motion.div className="grid pointer-events-none">
         {React.Children.map(children, (child) =>
           React.cloneElement(child, {
-            onPointerDown: (e) => {
-              setMouseIsDown(true);
-              controls.start(e);
-              selectedObject ? setSelectedObject(null) : null;
-              dispatchEvent(new CustomEvent("objectMoved"));
-            },
             onDoubleClick: () => {
-              selectedObject ? setSelectedObject(null) : setSelectedObject(scope.current);
+              selectedObject == scope.current
+                ? setSelectedObject(null)
+                : setSelectedObject(scope.current);
             },
             style: {
               ...child.props.style,
-              pointerEvents: "auto",
               border: selectedObject === scope.current ? "2px solid white" : null,
             },
           })
@@ -634,7 +409,7 @@ function Object({
       </motion.div>
       {selectedObject === scope.current && (
         <div className="flex gap-4 absolute pt-4 top-full pointer-events-auto">
-          <div className="bg-gray-700 p-2 rounded-full" onClick={() => rotateObject(flip == 180)}>
+          <div className="bg-gray-700 p-2 rounded-full" onClick={() => rotateObject(false)}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -660,7 +435,7 @@ function Object({
               <path d="M7 2.5a.5.5 0 0 0-.939-.24l-6 11A.5.5 0 0 0 .5 14h6a.5.5 0 0 0 .5-.5v-11zm2.376-.485a.5.5 0 0 1 .563.246l6 11A.5.5 0 0 1 15.5 14h-6a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .376-.485zM10 4.461V13h4.658L10 4.46z" />
             </svg>
           </div>
-          <div className="bg-gray-700 p-2 rounded-full" onClick={() => rotateObject(flip == 180)}>
+          <div className="bg-gray-700 p-2 rounded-full" onClick={() => rotateObject(true)}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
