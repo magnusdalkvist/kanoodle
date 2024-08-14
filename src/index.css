@@ -77,6 +77,10 @@ button:focus-visible {
   }
 }
 
+.selected .gamePieceCellDot {
+  border: 1px solid white;
+}
+
 .col-start-1 {
   grid-column-start: 1;
 }

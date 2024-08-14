@@ -63,7 +63,7 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
     let intervalId: number;
     if (startTimer) {
       // setting time from 0 to 1 every 10 milisecond using javascript setInterval method
-      intervalId = setInterval(() => setTime(time + 1), 10)
+      intervalId = setInterval(() => setTime(time + 1), 10);
     }
     return () => clearInterval(intervalId);
   }, [startTimer, time]);
@@ -83,8 +83,8 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
 
       gamePieces.forEach((gamePiece) => {
         if (
-          snapPoint.x === gamePiece.getBoundingClientRect().x - 5 &&
-          snapPoint.y === gamePiece.getBoundingClientRect().y - 5
+          snapPoint.x === gamePiece.getBoundingClientRect().x &&
+          snapPoint.y === gamePiece.getBoundingClientRect().y
         ) {
           snapPoint.occupied = true;
           snapPoint.occupiedBy = gamePiece.getAttribute("data-color")!;
@@ -101,7 +101,7 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
     <div ref={scope} className=" pointer-events-none flex flex-col justify-center items-center">
       <div ref={gameBoard} className="grid gameboard opacity-0 grid-cols-11 grid-rows-5 border">
         {Array.from({ length: 55 }, (_, i) => {
-          return <div key={i} className="gameCell w-10 h-10 border" />;
+          return <div key={i} className="gameCell w-6 h-6 md:w-10 md:h-10 border" />;
         })}
       </div>
       <div
@@ -134,15 +134,17 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
           {gamePiece.cells.map((cell, i) => (
             <div
               key={i}
-              className={`gamePieceCell pointer-events-auto w-10 h-10 rounded-full scale-75 ${cell.color} col-start-${cell.colStart}`}
+              className={`gamePieceCell pointer-events-auto w-6 h-6 md:w-10 md:h-10 col-start-${cell.colStart}`}
               data-color={cell.color}
-            ></div>
+            >
+              <div className={`gamePieceCellDot ${cell.color} w-full h-full rounded-full scale-75`}></div>
+            </div>
           ))}
         </GamePiece>
       ))}
       <div className="piecesContainer mx-auto max-w-[1200px] absolute flex flex-wrap m-5 left-5 right-5 top-[calc(50%+266px/2)] bottom-5">
         {gamePieces.map((piece) => (
-          <div key={piece.id} className="min-w-[180px] flex-1"></div>
+          <div key={piece.id} className="min-w-[100px] md:min-w-[180px] flex-1"></div>
         ))}
       </div>
       {gameWon && (
@@ -217,7 +219,7 @@ function GamePiece({
 
   const rotateObject = (clockwise: boolean) => {
     const increment = clockwise ? 90 : -90;
-    setRotate((prev) => flipRef.current ? prev + increment : prev - increment);
+    setRotate((prev) => (flipRef.current ? prev + increment : prev - increment));
   };
 
   useEffect(() => {
@@ -314,7 +316,7 @@ function GamePiece({
       for (let i = 0; i < children.length; i++) {
         const childRect = children[i].getBoundingClientRect();
         const closestSnapPoint: any = snapPoints.reduce(
-          (acc, snapPoint:any) => {
+          (acc, snapPoint: any) => {
             const distance = Math.sqrt(
               (snapPoint.x - childRect.x) ** 2 + (snapPoint.y - childRect.y) ** 2
             );
@@ -367,7 +369,7 @@ function GamePiece({
     }
   };
 
-  const handleKeyDown = (e:KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft") {
       rotateObject(false);
     }
@@ -427,6 +429,18 @@ function GamePiece({
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("mouseup", handleMouseUp);
       }}
+      onTouchStart={() => {
+        setDragged(false);
+        scope.current.style.zIndex = highestZIndex;
+        setHighestZIndex(highestZIndex + 1);
+        setMouseDown(true);
+        if (selectedObject !== scope.current) {
+          setSelectedObject(null);
+        }
+      }}
+      onTouchEnd={() => {
+        setMouseDown(false);
+      }}
       onDragStart={() => {
         setMouseDown(true);
         setSelectedObject(null);
@@ -434,27 +448,23 @@ function GamePiece({
       }}
     >
       <motion.div className="grid">
-        {React.Children.map(children, (child:any) =>
+        {React.Children.map(children, (child: any) =>
           React.cloneElement(child, {
-            style: {
-              ...child?.props.style,
-              border: selectedObject === scope.current ? "2px solid white" : null,
-            },
+            className: clsx(child.props.className, selectedObject == scope.current && "selected"),
           })
         )}
       </motion.div>
       {selectedObject === scope.current && (
-        <div draggable={false} className="flex gap-4 absolute pt-4 top-full pointer-events-none">
+        <div className="flex gap-4 absolute pt-2 md:pt-4 top-full pointer-events-none">
           <div
-            className="bg-gray-700 p-2 rounded-full pointer-events-auto"
+            className="bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto"
             onClick={() => rotateObject(false)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
               fill="currentColor"
               viewBox="0 0 16 16"
+              className="w-3 h-3 md:w-4 md:h-4"
             >
               <path
                 fillRule="evenodd"
@@ -463,27 +473,25 @@ function GamePiece({
               <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
             </svg>
           </div>
-          <div className="bg-gray-700 p-2 rounded-full pointer-events-auto" onClick={flipObject}>
+          <div className="bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto" onClick={flipObject}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
               fill="currentColor"
               viewBox="0 0 16 16"
+              className="w-3 h-3 md:w-4 md:h-4"
             >
               <path d="M7 2.5a.5.5 0 0 0-.939-.24l-6 11A.5.5 0 0 0 .5 14h6a.5.5 0 0 0 .5-.5v-11zm2.376-.485a.5.5 0 0 1 .563.246l6 11A.5.5 0 0 1 15.5 14h-6a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .376-.485zM10 4.461V13h4.658L10 4.46z" />
             </svg>
           </div>
           <div
-            className="bg-gray-700 p-2 rounded-full pointer-events-auto"
+            className="bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto"
             onClick={() => rotateObject(true)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
               fill="currentColor"
               viewBox="0 0 16 16"
+              className="w-3 h-3 md:w-4 md:h-4"
             >
               <path
                 fillRule="evenodd"
