@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 import StartScreen from "./components/StartScreen";
-import Game from "./components/Game";
+import Game from "./components/Game.tsx";
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false);
