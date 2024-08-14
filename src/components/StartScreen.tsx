@@ -18,11 +18,12 @@ export default function StartScreen({
         { opacity: isOpen ? 0 : 1 },
         {
           duration: 0.2,
+          delay: isOpen ? 0 : 1,
         }
       );
       animate(
         scope.current,
-        { y: isOpen ? "-20%" : 0 },
+        { top: isOpen ? "10%" : "50%" },
         {
           duration: 0.5,
           delay: 0.5,
@@ -31,7 +32,7 @@ export default function StartScreen({
 
       animate(
         ".letter",
-        { color: isOpen ? "#333" : "none" },
+        { filter: isOpen ? "contrast(0)" : "contrast(1)" },
         {
           duration: 0.5,
           delay: 1,
@@ -45,8 +46,8 @@ export default function StartScreen({
   const scope = useMenuAnimation(gameStarted);
 
   return (
-    <div ref={scope} className={clsx("absolute inset-0 flex items-center justify-center flex-col", gameStarted && "pointer-events-none")}>
-      <h1 className="tracking-tighter flex gap-2 select-none">
+    <div ref={scope} className={clsx("-translate-x-1/2 -translate-y-1/2 left-1/2 absolute flex items-center justify-center flex-col", gameStarted && "pointer-events-none")}>
+      <h1 style={{filter: "drop-shadow(2px 4px 6px black)"}} className="tracking-tighter flex gap-2 select-none">
         <span className="text-blue-500 letter">N</span>
         <span className="text-purple-400 letter">O</span>
         <span className="text-green-400 letter">O</span>

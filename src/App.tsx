@@ -9,7 +9,7 @@ function App() {
   return (
     <>
       <StartScreen gameStarted={gameStarted} setGameStarted={setGameStarted} />
-      {gameStarted && <Game gameStarted={gameStarted} />}
+      {gameStarted && <Game gameStarted={gameStarted} setGameStarted={setGameStarted} />}
     </>
   );
 }

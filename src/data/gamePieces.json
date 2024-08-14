@@ -100,9 +100,9 @@
     {
       "id": 11,
       "cells": [
-        { "color": "bg-white", "colStart": 1 },
-        { "color": "bg-white", "colStart": 2 },
-        { "color": "bg-white", "colStart": 1 }
+        { "color": "bg-yellow-200", "colStart": 1 },
+        { "color": "bg-yellow-200", "colStart": 2 },
+        { "color": "bg-yellow-200", "colStart": 1 }
       ]
     },
     {

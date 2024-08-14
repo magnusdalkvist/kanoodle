@@ -4,7 +4,7 @@ import { SnapPoints } from "./types";
 import { gamePieces } from "./data/gamePieces.json";
 import clsx from "clsx";
 
-export default function Game({ gameStarted }: { gameStarted: boolean }) {
+export default function Game({ gameStarted, setGameStarted }: { gameStarted: boolean, setGameStarted: (gameStarted: boolean) => void }) {
   const staggerMenuItems = stagger(0.1, { startDelay: 1.7 });
 
   function useMenuAnimation(isOpen: boolean) {
@@ -97,25 +97,46 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
     }
   };
 
+  const [reset, setReset] = useState(0);
+
   return (
-    <div ref={scope} className=" pointer-events-none flex flex-col justify-center items-center">
-      <div ref={gameBoard} className="grid gameboard opacity-0 grid-cols-11 grid-rows-5 border">
-        {Array.from({ length: 55 }, (_, i) => {
-          return <div key={i} className="gameCell w-6 h-6 md:w-10 md:h-10 border" />;
-        })}
-      </div>
-      <div
-        className={clsx(
-          "select-none ml-1 gameboard timer opacity-0 text-7xl flex gap-2 pt-5 font-dots transition-colors duration-300",
-          startTimer ? "text-neutral-200" : "text-[#333]"
-        )}
-      >
-        {/* Make a div for each number from 0-9 in minutes and seconds */}
-        <div>{Math.floor(minutes / 10)}</div>
-        <div>{minutes % 10}</div>
-        <div>:</div>
-        <div>{Math.floor(seconds / 10)}</div>
-        <div>{seconds % 10}</div>
+    <div ref={scope} className="pointer-events-none flex flex-col justify-center items-center">
+      <div className="relative w-full flex flex-col justify-center items-center">
+        <div
+          className={clsx(
+            "absolute select-none ml-1 bottom-full gameboard timer opacity-0 text-7xl flex gap-2 pt-5 font-dots transition-colors duration-300",
+            time > 0 ? "dark:text-neutral-200 text-[#666]" : "text-[#333]"
+          )}
+        >
+          {/* Make a div for each number from 0-9 in minutes and seconds */}
+          <div>{Math.floor(minutes / 10)}</div>
+          <div>{minutes % 10}</div>
+          <div>:</div>
+          <div>{Math.floor(seconds / 10)}</div>
+          <div>{seconds % 10}</div>
+        </div>
+        <div ref={gameBoard} className="grid gameboard opacity-0 grid-cols-11 grid-rows-5 border">
+          {Array.from({ length: 55 }, (_, i) => {
+            return <div key={i} className="gameCell w-6 h-6 md:w-10 md:h-10 border" />;
+          })}
+        </div>
+        <div
+          onClick={() => {
+            setReset((prev) => prev + 1);
+            if (gameWon) {
+              setGameWon(false);
+              setTime(0);
+              setStartTimer(false);
+              setGameStarted(false);
+            }
+          }}
+          className="absolute pointer-events-auto select-none transition text-[#333] hover:text-[#666] dark:hover:text-neutral-200 cursor-pointer gameboard opacity-0 top-full p-4 font-dots text-4xl"
+        >
+          RESET
+        </div>
+          <div className={clsx("absolute z-[10000000] w-full h-full inset-0 text-7xl font-bold text-[#333] flex items-center justify-center font-dots transition delay-500", gameWon ? "opacity-100 pointer-events-auto" : "opacity-0" )}>
+            <p className="flex-1">YOU WIN!</p>
+          </div>
       </div>
       {gamePieces.map((gamePiece, i) => (
         <GamePiece
@@ -130,6 +151,7 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
           checkSnapPoints={checkSnapPoints}
           setStartTimer={setStartTimer}
           startTimer={startTimer}
+          reset={reset}
         >
           {gamePiece.cells.map((cell, i) => (
             <div
@@ -137,21 +159,20 @@ export default function Game({ gameStarted }: { gameStarted: boolean }) {
               className={`gamePieceCell pointer-events-auto w-6 h-6 md:w-10 md:h-10 col-start-${cell.colStart}`}
               data-color={cell.color}
             >
-              <div className={`gamePieceCellDot ${cell.color} w-full h-full rounded-full scale-75`}></div>
+              <div
+                className={`gamePieceCellDot w-full h-full bg-[#e5e7eb] transition-all duration-500 ${
+                  !gameWon && `scale-75 rounded-[100px] ${cell.color}`
+                }`}
+              ></div>
             </div>
           ))}
         </GamePiece>
       ))}
-      <div className="piecesContainer mx-auto max-w-[1200px] absolute flex flex-wrap m-5 left-5 right-5 top-[calc(50%+266px/2)] bottom-5">
+      <div className="piecesContainer mx-auto max-w-[1200px] absolute flex flex-wrap m-10 bottom-0 top-[calc(50%+100px)]">
         {gamePieces.map((piece) => (
           <div key={piece.id} className="min-w-[100px] md:min-w-[180px] flex-1"></div>
         ))}
       </div>
-      {gameWon && (
-        <div className="fixed z-[10000000] inset-0 bg-[rgba(0,0,0,0.5)] backdrop-blur-md text-5xl font-bold text-green-500 flex items-center justify-center">
-          Perfect!
-        </div>
-      )}
     </div>
   );
 }
@@ -168,6 +189,7 @@ function GamePiece({
   index,
   setStartTimer,
   startTimer,
+  reset,
 }: {
   gameBoard: React.RefObject<HTMLDivElement>;
   snapPoints: SnapPoints;
@@ -180,6 +202,7 @@ function GamePiece({
   index: number;
   setStartTimer: React.Dispatch<React.SetStateAction<boolean>>;
   startTimer: boolean;
+  reset: boolean;
 }) {
   const constraintsRef = useRef<HTMLElement | null>(null);
   const [scope, animate] = useAnimate();
@@ -197,9 +220,14 @@ function GamePiece({
   }, [flip]);
 
   useEffect(() => {
+    resetPosition();
+  }, [reset]);
+
+  const resetPosition = () => {
     constraintsRef.current = document.body;
 
     setRotate(Math.floor(Math.random() * 4) * 90);
+    setFlip(Math.random() < 0.5);
     const scopeRect = scope.current.firstChild.getBoundingClientRect();
     const piecesContainer = document
       .querySelector(".piecesContainer")
@@ -211,7 +239,7 @@ function GamePiece({
       x: piecesContainer.x + piecesContainer.width / 2 - scopeRect.width / 2,
       y: piecesContainer.y + piecesContainer.height / 2 - scopeRect.height / 2,
     });
-  }, []);
+  };
 
   const flipObject = () => {
     setFlip((prev) => !prev);
@@ -473,7 +501,10 @@ function GamePiece({
               <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
             </svg>
           </div>
-          <div className="bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto" onClick={flipObject}>
+          <div
+            className="bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto"
+            onClick={flipObject}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="currentColor"
