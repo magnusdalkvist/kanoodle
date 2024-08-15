@@ -54,7 +54,7 @@ export default function StartScreen({
   const scope = useMenuAnimation(gameStarted);
 
   return (
-    <div ref={scope} className={clsx("-translate-x-1/2 left-1/2 absolute flex items-center justify-center flex-col", gameStarted && "pointer-events-none")}>
+    <div ref={scope} className={clsx("-translate-x-1/2 left-1/2 top-[calc(50%-175px)] absolute flex items-center justify-center flex-col", gameStarted && "pointer-events-none")}>
       <img src="darklogo.svg" alt="logo" className="w-32 h-32 hidden dark:block" />
       <img src="lightlogo.svg" alt="logo" className="w-32 h-32 dark:hidden" />
       <h1 className="tracking-tighter flex gap-2 select-none">
