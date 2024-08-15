@@ -82,7 +82,7 @@ export default function Game({
   const checkSnapPoints = () => {
     if (snapPoints.length === 0) return;
     const gamePieces = document.querySelectorAll(".gamePieceCell");
-    snapPoints.forEach((snapPoint, i) => {
+    snapPoints.forEach((snapPoint) => {
       snapPoint.occupied = false;
       snapPoint.occupiedBy = "";
 
