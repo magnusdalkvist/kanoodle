@@ -4,7 +4,13 @@ import { SnapPoints } from "./types";
 import { gamePieces } from "./data/gamePieces.json";
 import clsx from "clsx";
 
-export default function Game({ gameStarted, setGameStarted }: { gameStarted: boolean, setGameStarted: (gameStarted: boolean) => void }) {
+export default function Game({
+  gameStarted,
+  setGameStarted,
+}: {
+  gameStarted: boolean;
+  setGameStarted: (gameStarted: boolean) => void;
+}) {
   const staggerMenuItems = stagger(0.1, { startDelay: 1.7 });
 
   function useMenuAnimation(isOpen: boolean) {
@@ -62,22 +68,21 @@ export default function Game({ gameStarted, setGameStarted }: { gameStarted: boo
   useEffect(() => {
     let intervalId: number;
     if (startTimer) {
-      // setting time from 0 to 1 every 10 milisecond using javascript setInterval method
-      intervalId = setInterval(() => setTime(time + 1), 10);
+      intervalId = setInterval(() => setTime(time + 1), 1000);
     }
     return () => clearInterval(intervalId);
   }, [startTimer, time]);
 
   // Minutes calculation
-  const minutes = Math.floor((time % 360000) / 6000);
+  const minutes = Math.floor((time % 3600) / 60);
 
   // Seconds calculation
-  const seconds = Math.floor((time % 6000) / 100);
+  const seconds = Math.floor(time % 60);
 
   const checkSnapPoints = () => {
     if (snapPoints.length === 0) return;
     const gamePieces = document.querySelectorAll(".gamePieceCell");
-    snapPoints.forEach((snapPoint) => {
+    snapPoints.forEach((snapPoint, i) => {
       snapPoint.occupied = false;
       snapPoint.occupiedBy = "";
 
@@ -134,9 +139,14 @@ export default function Game({ gameStarted, setGameStarted }: { gameStarted: boo
         >
           RESET
         </div>
-          <div className={clsx("absolute z-[10000000] w-full h-full inset-0 text-7xl font-bold text-[#333] flex items-center justify-center font-dots transition delay-500", gameWon ? "opacity-100 pointer-events-auto" : "opacity-0" )}>
-            <p className="flex-1">YOU WIN!</p>
-          </div>
+        <div
+          className={clsx(
+            "absolute z-[10000000] w-full h-full inset-0 text-7xl font-bold text-[#333] flex items-center justify-center font-dots transition delay-500",
+            gameWon ? "opacity-100 pointer-events-auto" : "opacity-0"
+          )}
+        >
+          <p className="flex-1">YOU WIN!</p>
+        </div>
       </div>
       {gamePieces.map((gamePiece, i) => (
         <GamePiece
@@ -160,7 +170,7 @@ export default function Game({ gameStarted, setGameStarted }: { gameStarted: boo
               data-color={cell.color}
             >
               <div
-                className={`gamePieceCellDot w-full h-full bg-[#e5e7eb] transition-all duration-500 ${
+                className={`gamePieceCellDot w-full h-full bg-[#e5e7eb] transition-[color,border-radius,transform] duration-500 ${
                   !gameWon && `scale-75 rounded-[100px] ${cell.color}`
                 }`}
               ></div>
@@ -242,10 +252,14 @@ function GamePiece({
   };
 
   const flipObject = () => {
+    if (rotatingRef.current) return;
+    setIsRotating(true);
     setFlip((prev) => !prev);
   };
 
   const rotateObject = (clockwise: boolean) => {
+    if (rotatingRef.current) return;
+    setIsRotating(true);
     const increment = clockwise ? 90 : -90;
     setRotate((prev) => (flipRef.current ? prev + increment : prev - increment));
   };
@@ -255,12 +269,12 @@ function GamePiece({
       rotateY: flip ? 0 : 180,
       rotateZ: rotate,
       origin: 0.5,
-    });
+    }, { duration: 0.15});
 
     childAnimation.then(() => {
+      setIsRotating(false);
       if (mouseDown) return;
-
-      checkPiecePosition();
+        checkPiecePosition();
     });
   }, [flip, rotate]);
 
@@ -293,6 +307,16 @@ function GamePiece({
       flip: flip,
     };
   }, [position]);
+  
+  const [isRotating, setIsRotating] = useState(false);
+  const rotatingRef = useRef(flip);
+
+  useEffect(()=>{
+    rotatingRef.current = isRotating;
+    if (!mouseDown && !isRotating && dragged) {
+      checkPiecePosition();
+    }
+  }, [isRotating])
 
   const checkPiecePosition = () => {
     if (!gameBoard.current || !scope.current) return;

@@ -32,7 +32,7 @@ export default function StartScreen({
 
       animate(
         ".letter",
-        { filter: isOpen ? "contrast(0)" : "contrast(1)" },
+        { filter: isOpen ? "contrast(0)" : "contrast(1) drop-shadow(2px 4px 6px black)" },
         {
           duration: 0.5,
           delay: 1,
@@ -47,7 +47,7 @@ export default function StartScreen({
 
   return (
     <div ref={scope} className={clsx("-translate-x-1/2 -translate-y-1/2 left-1/2 absolute flex items-center justify-center flex-col", gameStarted && "pointer-events-none")}>
-      <h1 style={{filter: "drop-shadow(2px 4px 6px black)"}} className="tracking-tighter flex gap-2 select-none">
+      <h1 className="tracking-tighter flex gap-2 select-none">
         <span className="text-blue-500 letter">N</span>
         <span className="text-purple-400 letter">O</span>
         <span className="text-green-400 letter">O</span>
