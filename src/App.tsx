@@ -4,7 +4,7 @@ import StartScreen from "./components/StartScreen";
 import Game from "./Game";
 
 function App() {
-  const [gameStarted, setGameStarted] = useState({ started: false, daily: false, dailyPuzzle: });
+  const [gameStarted, setGameStarted] = useState({ started: false, daily: false });
 
   return (
     <>
