@@ -4,12 +4,12 @@ import StartScreen from "./components/StartScreen";
 import Game from "./Game";
 
 function App() {
-  const [gameStarted, setGameStarted] = useState(false);
+  const [gameStarted, setGameStarted] = useState({ started: false, daily: false, dailyPuzzle: });
 
   return (
     <>
       <StartScreen gameStarted={gameStarted} setGameStarted={setGameStarted} />
-      {gameStarted && <Game gameStarted={gameStarted} setGameStarted={setGameStarted} />}
+      {gameStarted.started && <Game gameStarted={gameStarted} setGameStarted={setGameStarted} />}
     </>
   );
 }

@@ -4,22 +4,81 @@ import { SnapPoints } from "./types";
 import { gamePieces } from "./data/gamePieces.json";
 import clsx from "clsx";
 
+const dailyGames = [
+  [
+    {
+      id: 1,
+      snapPoint: 0,
+      rotation: 180,
+      flip: false,
+    },
+    {
+      id: 2,
+      snapPoint: 3,
+      rotation: 90,
+      flip: false,
+    },
+  ],
+  [
+    {
+      id: 2,
+      snapPoint: 0,
+      rotation: 0,
+      flip: false,
+    },
+    {
+      id: 3,
+      snapPoint: 9,
+      rotation: 0,
+      flip: false,
+    },
+    {
+      id: 9,
+      snapPoint: 14,
+      rotation: 0,
+      flip: true,
+    },
+  ],
+  [
+    {
+      id: 1,
+      snapPoint: 0,
+      rotation: 0,
+      flip: true,
+    },
+    {
+      id: 5,
+      snapPoint: 22,
+      rotation: 0,
+      flip: false,
+    },
+    {
+      id: 6,
+      snapPoint: 1,
+      rotation: 0,
+      flip: true,
+    },
+  ],
+];
+
+const randomDay = Math.floor(Math.random() * dailyGames.length);
+
 export default function Game({
   gameStarted,
   setGameStarted,
 }: {
-  gameStarted: boolean;
-  setGameStarted: (gameStarted: boolean) => void;
+  gameStarted: { started: boolean; daily: boolean };
+  setGameStarted: (gameStarted: { started: boolean; daily: boolean }) => void;
 }) {
   const staggerMenuItems = stagger(0.1, { startDelay: 1.7 });
 
-  function useMenuAnimation(isOpen: boolean) {
+  function useMenuAnimation(gameStarted: { started: boolean; daily: boolean }) {
     const [scope, animate] = useAnimate();
 
     useEffect(() => {
       animate(
         ".gameboard",
-        { opacity: isOpen ? 1 : 0 },
+        { opacity: gameStarted.started ? 1 : 0 },
         {
           duration: 0.5,
           delay: 1.2,
@@ -28,13 +87,13 @@ export default function Game({
 
       animate(
         ".gamePiece",
-        { opacity: isOpen ? 1 : 0 },
+        { opacity: gameStarted.started ? 1 : 0 },
         {
           duration: 0.5,
-          delay: isOpen ? staggerMenuItems : 0,
+          delay: gameStarted.started ? staggerMenuItems : 0,
         }
       );
-    }, [isOpen]);
+    }, [gameStarted]);
 
     return scope;
   }
@@ -64,6 +123,10 @@ export default function Game({
       checkSnapPoints();
     }
   }, []);
+
+  useEffect(() => {
+    console.log(snapPoints);
+  }, [snapPoints]);
 
   useEffect(() => {
     let intervalId: number;
@@ -132,7 +195,7 @@ export default function Game({
               setGameWon(false);
               setTime(0);
               setStartTimer(false);
-              setGameStarted(false);
+              setGameStarted({ started: false, daily: false });
             }
           }}
           className="absolute pointer-events-auto select-none transition text-[#e5e7eb] hover:text-[#ccc] dark:hover:text-[#e5e7eb] dark:text-[#333] cursor-pointer gameboard opacity-0 top-full p-4 font-dots text-4xl"
@@ -148,36 +211,47 @@ export default function Game({
           <p className="flex-1">YOU WIN!</p>
         </div>
       </div>
-      {gamePieces.map((gamePiece, i) => (
-        <GamePiece
-          index={i}
-          key={i}
-          snapPoints={snapPoints}
-          gameBoard={gameBoard}
-          highestZIndex={highestZIndex}
-          setHighestZIndex={setHighestZIndex}
-          selectedObject={selectedObject}
-          setSelectedObject={setSelectedObject}
-          checkSnapPoints={checkSnapPoints}
-          setStartTimer={setStartTimer}
-          startTimer={startTimer}
-          reset={reset}
-        >
-          {gamePiece.cells.map((cell, i) => (
-            <div
+      {snapPoints &&
+        gamePieces.map((gamePiece, i) => {
+          const dailyPosition = gameStarted.daily
+            ? dailyGames[randomDay].find((piece) => piece.id === gamePiece.id)
+            : undefined;
+          return (
+            <GamePiece
+              index={i}
               key={i}
-              className={`gamePieceCell pointer-events-auto w-6 h-6 md:w-10 md:h-10 col-start-${cell.colStart}`}
-              data-color={cell.color}
+              snapPoints={snapPoints}
+              gameBoard={gameBoard}
+              highestZIndex={highestZIndex}
+              setHighestZIndex={setHighestZIndex}
+              selectedObject={selectedObject}
+              setSelectedObject={setSelectedObject}
+              checkSnapPoints={checkSnapPoints}
+              setStartTimer={setStartTimer}
+              startTimer={startTimer}
+              reset={reset}
+              dailyPosition={dailyPosition}
             >
-              <div
-                className={`gamePieceCellDot w-full h-full bg-[#e5e7eb] transition-[color,border-radius,transform] duration-500 ${
-                  !gameWon && `scale-75 rounded-[100px] ${cell.color}`
-                }`}
-              ></div>
-            </div>
-          ))}
-        </GamePiece>
-      ))}
+              {gamePiece.cells.map((cell, i) => (
+                <div
+                  key={i}
+                  className={clsx(
+                    dailyPosition ? "pointer-events-none" : "pointer-events-auto",
+                    `gamePieceCell w-6 h-6 md:w-10 md:h-10 col-start-${cell.colStart}`
+                  )}
+                  data-color={cell.color}
+                >
+                  <div
+                    style={{ backgroundColor: !gameWon && dailyPosition ? "#444" : undefined }}
+                    className={`gamePieceCellDot w-full h-full transition-[color,border-radius,transform] duration-500 ${
+                      !gameWon ? `scale-75 rounded-[100px] ${cell.color}` : "bg-[#e5e7eb] "
+                    }`}
+                  ></div>
+                </div>
+              ))}
+            </GamePiece>
+          );
+        })}
       <div className="piecesContainer mx-auto max-w-[1200px] absolute flex flex-wrap m-10 bottom-0 top-[calc(50%+100px)]">
         {gamePieces.map((piece) => (
           <div key={piece.id} className="min-w-[100px] md:min-w-[180px] flex-1"></div>
@@ -200,6 +274,7 @@ function GamePiece({
   setStartTimer,
   startTimer,
   reset,
+  dailyPosition,
 }: {
   gameBoard: React.RefObject<HTMLDivElement>;
   snapPoints: SnapPoints;
@@ -213,6 +288,7 @@ function GamePiece({
   setStartTimer: React.Dispatch<React.SetStateAction<boolean>>;
   startTimer: boolean;
   reset: number;
+  dailyPosition?: { id: number; snapPoint: number; rotation: number; flip: boolean } | undefined;
 }) {
   const constraintsRef = useRef<HTMLElement | null>(null);
   const [scope, animate] = useAnimate();
@@ -231,24 +307,39 @@ function GamePiece({
 
   useEffect(() => {
     resetPosition();
-  }, [reset]);
+  }, [reset, snapPoints]);
 
   const resetPosition = () => {
-    constraintsRef.current = document.body;
+    if (dailyPosition && snapPoints.length > 0) {
+      setRotate(dailyPosition.rotation);
+      setFlip(dailyPosition.flip);
+      setTimeout(() => {
+        const scopeRect = scope.current.firstChild.getBoundingClientRect();
+        const offsetX = Math.round(scopeRect.x - scope.current.getBoundingClientRect().x);
+        const offsetY = Math.round(scopeRect.y - scope.current.getBoundingClientRect().y);
+        console.log(scopeRect.x, scopeRect.y, offsetX, offsetY);
+        setPosition({
+          x: snapPoints[dailyPosition.snapPoint].x - offsetX,
+          y: snapPoints[dailyPosition.snapPoint].y - offsetY,
+        });
+      }, 1000);
+    } else {
+      constraintsRef.current = document.body;
 
-    setRotate(Math.floor(Math.random() * 4) * 90);
-    setFlip(Math.random() < 0.5);
-    const scopeRect = scope.current.firstChild.getBoundingClientRect();
-    const piecesContainer = document
-      .querySelector(".piecesContainer")
-      ?.children[index].getBoundingClientRect();
+      setRotate(Math.floor(Math.random() * 4) * 90);
+      setFlip(Math.random() < 0.5);
+      const scopeRect = scope.current.firstChild.getBoundingClientRect();
+      const piecesContainer = document
+        .querySelector(".piecesContainer")
+        ?.children[index].getBoundingClientRect();
 
-    if (!piecesContainer) return;
-    //put piece in center of piecesContainer
-    setPosition({
-      x: piecesContainer.x + piecesContainer.width / 2 - scopeRect.width / 2,
-      y: piecesContainer.y + piecesContainer.height / 2 - scopeRect.height / 2,
-    });
+      if (!piecesContainer) return;
+      //put piece in center of piecesContainer
+      setPosition({
+        x: piecesContainer.x + piecesContainer.width / 2 - scopeRect.width / 2,
+        y: piecesContainer.y + piecesContainer.height / 2 - scopeRect.height / 2,
+      });
+    }
   };
 
   const flipObject = () => {
@@ -265,16 +356,20 @@ function GamePiece({
   };
 
   useEffect(() => {
-    const childAnimation = animate(scope.current.firstChild, {
-      rotateY: flip ? 0 : 180,
-      rotateZ: rotate,
-      origin: 0.5,
-    }, { duration: 0.15});
+    const childAnimation = animate(
+      scope.current.firstChild,
+      {
+        rotateY: flip ? 0 : 180,
+        rotateZ: rotate,
+        origin: 0.5,
+      },
+      { duration: 0.15 }
+    );
 
     childAnimation.then(() => {
       setIsRotating(false);
       if (mouseDown) return;
-        checkPiecePosition();
+      checkPiecePosition();
     });
   }, [flip, rotate]);
 
@@ -283,7 +378,6 @@ function GamePiece({
     const animation = animate(scope.current, {
       x: position.x,
       y: position.y,
-      duration: 0.3,
     });
 
     animation.then(() => {
@@ -307,21 +401,21 @@ function GamePiece({
       flip: flip,
     };
   }, [position]);
-  
+
   const [isRotating, setIsRotating] = useState(false);
   const rotatingRef = useRef(flip);
 
-  useEffect(()=>{
+  useEffect(() => {
     rotatingRef.current = isRotating;
     if (!mouseDown && !isRotating && dragged) {
       checkPiecePosition();
     }
-  }, [isRotating])
+  }, [isRotating]);
 
   const checkPiecePosition = () => {
     if (!gameBoard.current || !scope.current) return;
 
-    !startTimer && setStartTimer(true);
+    !startTimer && !dailyPosition && setStartTimer(true);
 
     const scopeRect = scope.current.firstChild.getBoundingClientRect();
 
@@ -390,6 +484,7 @@ function GamePiece({
       }
 
       if (isColliding) {
+        console.log("colliding");
         setPosition({
           x: prevPositionRef.current?.x!,
           y: prevPositionRef.current?.y!,
@@ -507,9 +602,9 @@ function GamePiece({
         )}
       </motion.div>
       {selectedObject === scope.current && (
-        <div className="flex gap-4 absolute pt-2 md:pt-4 top-full pointer-events-none">
+        <div className="flex gap-4 absolute text-white pt-2 md:pt-4 top-full pointer-events-none">
           <div
-            className="bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto"
+            className="bg-neutral-300 dark:bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto"
             onClick={() => rotateObject(false)}
           >
             <svg
@@ -526,7 +621,7 @@ function GamePiece({
             </svg>
           </div>
           <div
-            className="bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto"
+            className="bg-neutral-300 dark:bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto"
             onClick={flipObject}
           >
             <svg
@@ -539,7 +634,7 @@ function GamePiece({
             </svg>
           </div>
           <div
-            className="bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto"
+            className="bg-neutral-300 dark:bg-neutral-700 p-1.5 md:p-2 rounded-full pointer-events-auto"
             onClick={() => rotateObject(true)}
           >
             <svg

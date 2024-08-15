@@ -57,6 +57,10 @@ button {
   transition: border-color 0.25s;
 }
 
+.selected .gamePieceCellDot {
+  box-shadow: 0 0 10px black;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -68,10 +72,9 @@ button {
   button {
     background-color: #f9f9f9;
   }
-}
-
-.selected .gamePieceCellDot {
-  border: 1px solid white;
+  .selected .gamePieceCellDot {
+    box-shadow: 0 0 10px grey;
+  }
 }
 
 .col-start-1 {

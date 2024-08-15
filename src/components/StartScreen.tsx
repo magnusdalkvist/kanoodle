@@ -1,29 +1,29 @@
 import clsx from "clsx";
-import { useAnimate } from "framer-motion";
+import { stagger, useAnimate } from "framer-motion";
 import { useEffect } from "react";
 
 export default function StartScreen({
   gameStarted,
   setGameStarted,
 }: {
-  gameStarted: boolean;
-  setGameStarted: (gameStarted: boolean) => void;
+  gameStarted: { started: boolean, daily: boolean },
+  setGameStarted: (gameStarted: { started: boolean, daily: boolean }) => void
 }) {
-  function useMenuAnimation(isOpen: boolean) {
+  function useMenuAnimation(gameStarted: { started: boolean, daily: boolean }) {
     const [scope, animate] = useAnimate();
 
     useEffect(() => {
       animate(
         ".startButton",
-        { opacity: isOpen ? 0 : 1 },
+        { opacity: gameStarted.started ? 0 : 1 },
         {
           duration: 0.2,
-          delay: isOpen ? 0 : 1,
+          delay: gameStarted.started ? stagger(.2, {from: gameStarted.daily ? "last" : "first"}) : 1,
         }
       );
       animate(
         scope.current,
-        { top: isOpen ? "40px" : "calc(50% - 175px)" },
+        { top: gameStarted.started ? "40px" : "calc(50% - 175px)" },
         {
           duration: 0.5,
           delay: 0.5,
@@ -32,7 +32,7 @@ export default function StartScreen({
 
       animate(
         ".letter",
-        { filter: isOpen ? "contrast(0) opacity(20%)" : "contrast(1)" },
+        { filter: gameStarted.started ? "contrast(0) opacity(20%)" : "contrast(1)" },
         {
           duration: 0.5,
           delay: 1,
@@ -40,13 +40,13 @@ export default function StartScreen({
       );
       animate(
         "img",
-        { filter: isOpen ? "grayscale(1) opacity(20%)" : "grayscale(0)" },
+        { filter: gameStarted.started ? "grayscale(1) opacity(20%)" : "grayscale(0)" },
         {
           duration: 0.5,
           delay: 1,
         }
       );
-    }, [isOpen]);
+    }, [gameStarted.started]);
 
     return scope;
   }
@@ -54,7 +54,13 @@ export default function StartScreen({
   const scope = useMenuAnimation(gameStarted);
 
   return (
-    <div ref={scope} className={clsx("-translate-x-1/2 left-1/2 top-[calc(50%-175px)] absolute flex items-center justify-center flex-col", gameStarted && "pointer-events-none")}>
+    <div
+      ref={scope}
+      className={clsx(
+        "-translate-x-1/2 left-1/2 top-[calc(50%-175px)] absolute flex items-center justify-center flex-col",
+        gameStarted && "pointer-events-none"
+      )}
+    >
       <img src="darklogo.svg" alt="logo" className="w-32 h-32 hidden dark:block" />
       <img src="lightlogo.svg" alt="logo" className="w-32 h-32 dark:hidden" />
       <h1 className="tracking-tighter flex gap-2 select-none">
@@ -65,9 +71,14 @@ export default function StartScreen({
         <span className="text-red-400 letter">L</span>
         <span className="text-yellow-400 letter">E</span>
       </h1>
-      <button className="startButton" onClick={() => setGameStarted(true)}>
-        PLAY
-      </button>
+      <div className="flex gap-4 pointer-events-auto">
+        <button className="startButton" onClick={() => setGameStarted({started: true, daily: false})}>
+          FREE PLAY
+        </button>
+        <button className="startButton" onClick={() => setGameStarted({started: true, daily: true})}>
+          DAILY CHALLENGE
+        </button>
+      </div>
     </div>
   );
 }
