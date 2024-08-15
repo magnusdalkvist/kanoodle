@@ -110,7 +110,7 @@ export default function Game({
         <div
           className={clsx(
             "absolute select-none ml-1 bottom-full gameboard timer opacity-0 text-7xl flex gap-2 pt-5 font-dots transition-colors duration-300",
-            time > 0 ? "dark:text-neutral-200 text-[#ccc]" : "text-[#e5e7eb]"
+            time > 0 ? "dark:text-neutral-200 text-[#ccc]" : "text-[#e5e7eb] dark:text-[#333]"
           )}
         >
           {/* Make a div for each number from 0-9 in minutes and seconds */}
@@ -135,7 +135,7 @@ export default function Game({
               setGameStarted(false);
             }
           }}
-          className="absolute pointer-events-auto select-none transition text-[#e5e7eb] hover:text-[#ccc] dark:hover:text-neutral-200 cursor-pointer gameboard opacity-0 top-full p-4 font-dots text-4xl"
+          className="absolute pointer-events-auto select-none transition text-[#e5e7eb] hover:text-[#ccc] dark:hover:text-[#e5e7eb] dark:text-[#333] cursor-pointer gameboard opacity-0 top-full p-4 font-dots text-4xl"
         >
           {gameWon ? "RESTART" : "RESET"}
         </div>
