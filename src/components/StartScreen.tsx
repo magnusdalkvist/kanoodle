@@ -23,7 +23,7 @@ export default function StartScreen({
       );
       animate(
         scope.current,
-        { top: isOpen ? "10%" : "50%" },
+        { top: isOpen ? "20%" : "50%" },
         {
           duration: 0.5,
           delay: 0.5,
@@ -32,7 +32,15 @@ export default function StartScreen({
 
       animate(
         ".letter",
-        { filter: isOpen ? "contrast(0)" : "contrast(1) drop-shadow(2px 4px 6px black)" },
+        { filter: isOpen ? "contrast(0) opacity(20%)" : "contrast(1)" },
+        {
+          duration: 0.5,
+          delay: 1,
+        }
+      );
+      animate(
+        "img",
+        { filter: isOpen ? "grayscale(1) opacity(20%)" : "grayscale(0)" },
         {
           duration: 0.5,
           delay: 1,
@@ -47,6 +55,8 @@ export default function StartScreen({
 
   return (
     <div ref={scope} className={clsx("-translate-x-1/2 -translate-y-1/2 left-1/2 absolute flex items-center justify-center flex-col", gameStarted && "pointer-events-none")}>
+      <img src="src/public/darklogo.svg" alt="logo" className="w-32 h-32 hidden dark:block" />
+      <img src="src/public/lightlogo.svg" alt="logo" className="w-32 h-32 dark:hidden" />
       <h1 className="tracking-tighter flex gap-2 select-none">
         <span className="text-blue-500 letter">N</span>
         <span className="text-purple-400 letter">O</span>
