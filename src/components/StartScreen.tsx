@@ -111,7 +111,7 @@ export default function StartScreen({
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={() => setShowHowTo(false)}
         >
-          <div className="bg-white p-4 rounded-lg shadow-lg">
+          <div className="bg-white dark:bg-[#1a1a1a] p-4 rounded-lg">
             <h1 className="text-6xl font-bold uppercase ml-4">How to play?</h1>
             <p className="mt-4">
               The game is called Noodle and it works similar to Kanoodle.
