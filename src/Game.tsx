@@ -125,10 +125,6 @@ export default function Game({
   }, []);
 
   useEffect(() => {
-    console.log(snapPoints);
-  }, [snapPoints]);
-
-  useEffect(() => {
     let intervalId: number;
     if (startTimer) {
       intervalId = setInterval(() => setTime(time + 1), 1000);
@@ -242,10 +238,8 @@ export default function Game({
                   data-color={cell.color}
                 >
                   <div
-                    style={{ backgroundColor: !gameWon && dailyPosition ? "#444" : undefined }}
                     className={`gamePieceCellDot w-full h-full transition-[color,border-radius,transform] duration-500 ${
-                      !gameWon ? `scale-75 rounded-[100px] ${cell.color}` : "bg-[#e5e7eb] "
-                    }`}
+                      !gameWon && `scale-75 rounded-[100px]`} ${!gameWon && dailyPosition ? "bg-[#e5e7eb] dark:bg-[#444]" : gameWon ? "bg-[#e5e7eb]" : `${cell.color}`}`}
                   ></div>
                 </div>
               ))}
@@ -317,7 +311,6 @@ function GamePiece({
         const scopeRect = scope.current.firstChild.getBoundingClientRect();
         const offsetX = Math.round(scopeRect.x - scope.current.getBoundingClientRect().x);
         const offsetY = Math.round(scopeRect.y - scope.current.getBoundingClientRect().y);
-        console.log(scopeRect.x, scopeRect.y, offsetX, offsetY);
         setPosition({
           x: snapPoints[dailyPosition.snapPoint].x - offsetX,
           y: snapPoints[dailyPosition.snapPoint].y - offsetY,
@@ -484,7 +477,6 @@ function GamePiece({
       }
 
       if (isColliding) {
-        console.log("colliding");
         setPosition({
           x: prevPositionRef.current?.x!,
           y: prevPositionRef.current?.y!,
