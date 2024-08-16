@@ -83,7 +83,7 @@ export default function StartScreen({
           <span className="text-red-400 letter">L</span>
           <span className="text-yellow-400 letter">E</span>
         </h1>
-        <div className="grid grid-cols-2 gap-4 pointer-events-auto">
+        <div className="grid md:grid-cols-2 gap-4 pointer-events-auto">
           <button
             className="startButton"
             onClick={() => setGameStarted({ started: true, daily: false })}
@@ -100,7 +100,7 @@ export default function StartScreen({
             onClick={() => {
               setShowHowTo(true);
             }}
-            className="how-to text-center col-span-2 font-dots text-2xl uppercase hover:underline cursor-pointer"
+            className="how-to text-center md:col-span-2 font-dots text-2xl uppercase hover:underline cursor-pointer"
           >
             How to play?
           </div>
@@ -111,7 +111,7 @@ export default function StartScreen({
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={() => setShowHowTo(false)}
         >
-          <div className="bg-white dark:bg-[#1a1a1a] p-4 rounded-lg">
+          <div className="bg-white dark:bg-[#1a1a1a] p-4 rounded-lg m-4">
             <h1 className="text-6xl font-bold uppercase ml-4">How to play?</h1>
             <p className="mt-4">
               The game is called Noodle and it works similar to Kanoodle.
