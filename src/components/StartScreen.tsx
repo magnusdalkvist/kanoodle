@@ -70,7 +70,7 @@ export default function StartScreen({
         ref={scope}
         className={clsx(
           "-translate-x-1/2 left-1/2 top-[calc(50%-175px)] absolute flex items-center justify-center flex-col",
-          gameStarted && "pointer-events-none"
+          gameStarted.started ? "pointer-events-none" : "pointer-events-auto"
         )}
       >
         <img src="darklogo.svg" alt="logo" className="w-32 h-32 hidden dark:block" />
@@ -83,7 +83,7 @@ export default function StartScreen({
           <span className="text-red-400 letter">L</span>
           <span className="text-yellow-400 letter">E</span>
         </h1>
-        <div className="grid md:grid-cols-2 gap-4 pointer-events-auto">
+        <div className="grid md:grid-cols-2 gap-4">
           <button
             className="startButton"
             onClick={() => setGameStarted({ started: true, daily: false })}

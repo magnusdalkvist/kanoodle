@@ -141,9 +141,10 @@ export default function Game({
   const checkSnapPoints = () => {
     if (snapPoints.length === 0) return;
     const gamePieces = document.querySelectorAll(".gamePieceCell");
-    snapPoints.forEach((snapPoint) => {
+    snapPoints.forEach((snapPoint, i) => {
       snapPoint.occupied = false;
       snapPoint.occupiedBy = "";
+      gameBoard.current.children[i].style.backgroundColor = "";
 
       gamePieces.forEach((gamePiece) => {
         if (
@@ -152,6 +153,7 @@ export default function Game({
         ) {
           snapPoint.occupied = true;
           snapPoint.occupiedBy = gamePiece.getAttribute("data-color")!;
+          gameBoard.current.children[i].style.backgroundColor = "red";
         }
       });
     });
@@ -239,7 +241,14 @@ export default function Game({
                 >
                   <div
                     className={`gamePieceCellDot w-full h-full transition-[color,border-radius,transform] duration-500 ${
-                      !gameWon && `scale-75 rounded-[100px]`} ${!gameWon && dailyPosition ? "bg-[#e5e7eb] dark:bg-[#444]" : gameWon ? "bg-[#e5e7eb]" : `${cell.color}`}`}
+                      !gameWon && `scale-75 rounded-[100px]`
+                    } ${
+                      !gameWon && dailyPosition
+                        ? "bg-[#e5e7eb] dark:bg-[#444]"
+                        : gameWon
+                        ? "bg-[#e5e7eb]"
+                        : `${cell.color}`
+                    }`}
                   ></div>
                 </div>
               ))}
@@ -336,14 +345,10 @@ function GamePiece({
   };
 
   const flipObject = () => {
-    if (rotatingRef.current) return;
-    setIsRotating(true);
     setFlip((prev) => !prev);
   };
 
   const rotateObject = (clockwise: boolean) => {
-    if (rotatingRef.current) return;
-    setIsRotating(true);
     const increment = clockwise ? 90 : -90;
     setRotate((prev) => (flipRef.current ? prev + increment : prev - increment));
   };
@@ -358,13 +363,12 @@ function GamePiece({
       },
       { duration: 0.15 }
     );
-
+    
     childAnimation.then(() => {
-      setIsRotating(false);
       if (mouseDown) return;
       checkPiecePosition();
     });
-  }, [flip, rotate]);
+  }, [flip, rotate,mouseDown]);
 
   useEffect(() => {
     if (mouseDown) return;
@@ -373,17 +377,13 @@ function GamePiece({
       y: position.y,
     });
 
-    animation.then(() => {
-      checkSnapPoints();
-    });
-
     const childAnimation = animate(scope.current.firstChild, {
       rotateY: flip ? 0 : 180,
       rotateZ: rotate,
       origin: 0.5,
     });
 
-    childAnimation.then(() => {
+    Promise.all([animation, childAnimation]).then(() => {
       checkSnapPoints();
     });
 
@@ -395,16 +395,6 @@ function GamePiece({
     };
   }, [position]);
 
-  const [isRotating, setIsRotating] = useState(false);
-  const rotatingRef = useRef(flip);
-
-  useEffect(() => {
-    rotatingRef.current = isRotating;
-    if (!mouseDown && !isRotating && dragged) {
-      checkPiecePosition();
-    }
-  }, [isRotating]);
-
   const checkPiecePosition = () => {
     if (!gameBoard.current || !scope.current) return;
 
@@ -413,10 +403,10 @@ function GamePiece({
     const scopeRect = scope.current.firstChild.getBoundingClientRect();
 
     const gameBoardRect = gameBoard.current.getBoundingClientRect();
-    const offsetX = scopeRect.x - scope.current.getBoundingClientRect().x;
-    const offsetY = scopeRect.y - scope.current.getBoundingClientRect().y;
+    const offsetX = Math.round(scopeRect.x - scope.current.getBoundingClientRect().x);
+    const offsetY = Math.round(scopeRect.y - scope.current.getBoundingClientRect().y);
 
-    const border = 20;
+    const border = 10;
 
     const isInsideGameBoard =
       scopeRect.x >= gameBoardRect.x - border &&
@@ -535,7 +525,7 @@ function GamePiece({
 
     // Remove event listener to "a" and "d" to rotate object
     document.removeEventListener("keydown", handleKeyDown);
-    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener("pointerup", handleMouseUp);
   };
 
   const [dragged, setDragged] = useState(false);
@@ -548,9 +538,6 @@ function GamePiece({
       dragConstraints={constraintsRef}
       dragMomentum={false}
       dragElastic={0}
-      onDragEnd={() => {
-        checkPiecePosition();
-      }}
       onPointerUp={() => {
         if (!dragged) {
           setSelectedObject(scope.current);
@@ -566,19 +553,7 @@ function GamePiece({
         }
         // Add event listener to "a" and "d" to rotate object
         document.addEventListener("keydown", handleKeyDown);
-        document.addEventListener("mouseup", handleMouseUp);
-      }}
-      onTouchStart={() => {
-        setDragged(false);
-        scope.current.style.zIndex = highestZIndex;
-        setHighestZIndex(highestZIndex + 1);
-        setMouseDown(true);
-        if (selectedObject !== scope.current) {
-          setSelectedObject(null);
-        }
-      }}
-      onTouchEnd={() => {
-        setMouseDown(false);
+        document.addEventListener("pointerup", handleMouseUp);
       }}
       onDragStart={() => {
         setMouseDown(true);
