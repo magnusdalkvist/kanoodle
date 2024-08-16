@@ -141,10 +141,9 @@ export default function Game({
   const checkSnapPoints = () => {
     if (snapPoints.length === 0) return;
     const gamePieces = document.querySelectorAll(".gamePieceCell");
-    snapPoints.forEach((snapPoint, i) => {
+    snapPoints.forEach((snapPoint) => {
       snapPoint.occupied = false;
       snapPoint.occupiedBy = "";
-      gameBoard.current.children[i].style.backgroundColor = "";
 
       gamePieces.forEach((gamePiece) => {
         if (
@@ -153,7 +152,6 @@ export default function Game({
         ) {
           snapPoint.occupied = true;
           snapPoint.occupiedBy = gamePiece.getAttribute("data-color")!;
-          gameBoard.current.children[i].style.backgroundColor = "red";
         }
       });
     });
